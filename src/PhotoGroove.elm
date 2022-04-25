@@ -1,20 +1,31 @@
 module PhotoGroove exposing (main)
 
+import Array exposing (Array)
+import Browser
 import Html exposing (div, h1, img, text)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 
 
-main : Html.Html msg
+main : Program () Model Msg
 main =
-    view initialModel
+    Browser.sandbox
+        { init = initialModel
+        , view = view
+        , update = update
+        }
 
 
 
 -- Data
 
 
+type alias Photo =
+    { url : String }
+
+
 type alias Model =
-    { photos : List { url : String }
+    { photos : List Photo
     , selectedUrl : String
     }
 
@@ -30,6 +41,30 @@ initialModel =
     }
 
 
+photoArray : Array Photo
+photoArray =
+    Array.fromList initialModel.photos
+
+
+
+-- Update
+
+
+type Msg
+    = Msg1
+    | Msg2
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Msg1 ->
+            model
+
+        Msg2 ->
+            model
+
+
 
 -- View
 
@@ -39,11 +74,11 @@ urlPrefix =
     "http://elm-in-action.com/"
 
 
-view : Model -> Html.Html msg
+view : Model -> Html.Html Msg
 view model =
     div [ class "content" ]
         [ h1 [] [ text "Photo Groove" ]
-        , div [ id "thumbnails" ] (List.map (\photo -> viewThumbnail model.selectedUrl photo) model.photos)
+        , div [ id "thumbnails" ] (List.map (viewThumbnail model.selectedUrl) model.photos)
         , img
             [ class "large"
             , src (urlPrefix ++ "large/" ++ model.selectedUrl)
@@ -52,10 +87,11 @@ view model =
         ]
 
 
-viewThumbnail : String -> { url : String } -> Html.Html msg
+viewThumbnail : String -> Photo -> Html.Html Msg
 viewThumbnail selectedUrl thumb =
     img
         [ src (urlPrefix ++ thumb.url)
         , classList [ ( "selected", selectedUrl == thumb.url ) ]
+        , onClick Msg1
         ]
         []
