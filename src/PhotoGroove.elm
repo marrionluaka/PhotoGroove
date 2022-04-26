@@ -2,7 +2,7 @@ module PhotoGroove exposing (main)
 
 import Array exposing (Array)
 import Browser
-import Html exposing (div, h1, img, text)
+import Html exposing (button, div, h1, img, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 
@@ -20,6 +20,12 @@ main =
 -- Data
 
 
+type ThumbnailSize
+    = Small
+    | Medium
+    | Large
+
+
 type alias Photo =
     { url : String }
 
@@ -27,6 +33,7 @@ type alias Photo =
 type alias Model =
     { photos : List Photo
     , selectedUrl : String
+    , chosenSize : ThumbnailSize
     }
 
 
@@ -38,6 +45,7 @@ initialModel =
         , { url = "3.jpeg" }
         ]
     , selectedUrl = "1.jpeg"
+    , chosenSize = Medium
     }
 
 
@@ -51,18 +59,18 @@ photoArray =
 
 
 type Msg
-    = Msg1
-    | Msg2
+    = ClickedPhoto String
+    | ClickedSurpriseMe
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Msg1 ->
-            model
+        ClickedPhoto url ->
+            { model | selectedUrl = url }
 
-        Msg2 ->
-            model
+        ClickedSurpriseMe ->
+            { model | selectedUrl = "2.jpeg" }
 
 
 
@@ -78,6 +86,7 @@ view : Model -> Html.Html Msg
 view model =
     div [ class "content" ]
         [ h1 [] [ text "Photo Groove" ]
+        , viewSurpriseMeBtn
         , div [ id "thumbnails" ] (List.map (viewThumbnail model.selectedUrl) model.photos)
         , img
             [ class "large"
@@ -87,11 +96,20 @@ view model =
         ]
 
 
+viewSurpriseMeBtn : Html.Html Msg
+viewSurpriseMeBtn =
+    button
+        [ onClick ClickedSurpriseMe
+        ]
+        [ text "Surprise Me!"
+        ]
+
+
 viewThumbnail : String -> Photo -> Html.Html Msg
 viewThumbnail selectedUrl thumb =
     img
         [ src (urlPrefix ++ thumb.url)
         , classList [ ( "selected", selectedUrl == thumb.url ) ]
-        , onClick Msg1
+        , onClick (ClickedPhoto thumb.url)
         ]
         []
