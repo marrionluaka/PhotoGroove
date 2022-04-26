@@ -4,8 +4,8 @@ import Array exposing (Array)
 import Browser
 import Html exposing (button, div, h1, h3, img, input, label, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
+import Random
 
 
 main : Program () Model Msg
@@ -94,7 +94,7 @@ view model =
         , viewSurpriseMeBtn
         , h3 [] [ text "Thumbnail Size:" ]
         , div [ id "choose-size" ]
-            (List.map viewSizeChooser [ Small, Medium, Large ])
+            (List.map (viewSizeChooser model.chosenSize) [ Small, Medium, Large ])
         , div [ id "thumbnails", class (sizeToString model.chosenSize) ] (List.map (viewThumbnail model.selectedUrl) model.photos)
         , img
             [ class "large"
@@ -114,10 +114,21 @@ getPhotoUrl index =
             ""
 
 
-viewSizeChooser : ThumbnailSize -> Html.Html Msg
-viewSizeChooser size =
+randomPhotoPicker : Random.Generator Int
+randomPhotoPicker =
+    Random.int 0 (Array.length photoArray - 1)
+
+
+viewSizeChooser : ThumbnailSize -> ThumbnailSize -> Html.Html Msg
+viewSizeChooser currentSize size =
     label []
-        [ input [ type_ "radio", name "size", onClick (ClickedSize size) ] []
+        [ input
+            [ type_ "radio"
+            , name "size"
+            , onClick (ClickedSize size)
+            , checked (currentSize == size)
+            ]
+            []
         , text (sizeToString size)
         ]
 

@@ -10610,28 +10610,40 @@ var $author$project$PhotoGroove$urlPrefix = 'http://elm-in-action.com/';
 var $author$project$PhotoGroove$ClickedSize = function (a) {
 	return {$: 'ClickedSize', a: a};
 };
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
-var $author$project$PhotoGroove$viewSizeChooser = function (size) {
-	return A2(
-		$elm$html$Html$label,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$type_('radio'),
-						$elm$html$Html$Attributes$name('size'),
-						$elm$html$Html$Events$onClick(
-						$author$project$PhotoGroove$ClickedSize(size))
-					]),
-				_List_Nil),
-				$elm$html$Html$text(
-				$author$project$PhotoGroove$sizeToString(size))
-			]));
-};
+var $author$project$PhotoGroove$viewSizeChooser = F2(
+	function (currentSize, size) {
+		return A2(
+			$elm$html$Html$label,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('radio'),
+							$elm$html$Html$Attributes$name('size'),
+							$elm$html$Html$Events$onClick(
+							$author$project$PhotoGroove$ClickedSize(size)),
+							$elm$html$Html$Attributes$checked(
+							_Utils_eq(currentSize, size))
+						]),
+					_List_Nil),
+					$elm$html$Html$text(
+					$author$project$PhotoGroove$sizeToString(size))
+				]));
+	});
 var $author$project$PhotoGroove$ClickedSurpriseMe = {$: 'ClickedSurpriseMe'};
 var $author$project$PhotoGroove$viewSurpriseMeBtn = A2(
 	$elm$html$Html$button,
@@ -10719,7 +10731,7 @@ var $author$project$PhotoGroove$view = function (model) {
 					]),
 				A2(
 					$elm$core$List$map,
-					$author$project$PhotoGroove$viewSizeChooser,
+					$author$project$PhotoGroove$viewSizeChooser(model.chosenSize),
 					_List_fromArray(
 						[$author$project$PhotoGroove$Small, $author$project$PhotoGroove$Medium, $author$project$PhotoGroove$Large]))),
 				A2(
