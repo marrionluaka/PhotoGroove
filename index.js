@@ -10568,15 +10568,21 @@ var $elm$browser$Browser$sandbox = function (impl) {
 };
 var $author$project$PhotoGroove$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'ClickedPhoto') {
-			var url = msg.a;
-			return _Utils_update(
-				model,
-				{selectedUrl: url});
-		} else {
-			return _Utils_update(
-				model,
-				{selectedUrl: '2.jpeg'});
+		switch (msg.$) {
+			case 'ClickedPhoto':
+				var url = msg.a;
+				return _Utils_update(
+					model,
+					{selectedUrl: url});
+			case 'ClickedSurpriseMe':
+				return _Utils_update(
+					model,
+					{selectedUrl: '2.jpeg'});
+			default:
+				var size = msg.a;
+				return _Utils_update(
+					model,
+					{chosenSize: size});
 		}
 	});
 var $author$project$PhotoGroove$Large = {$: 'Large'};
@@ -10584,15 +10590,6 @@ var $author$project$PhotoGroove$Small = {$: 'Small'};
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$html$Html$img = _VirtualDom_node('img');
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
-var $author$project$PhotoGroove$urlPrefix = 'http://elm-in-action.com/';
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $author$project$PhotoGroove$sizeToString = function (size) {
 	switch (size.$) {
 		case 'Small':
@@ -10603,6 +10600,18 @@ var $author$project$PhotoGroove$sizeToString = function (size) {
 			return 'large';
 	}
 };
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $author$project$PhotoGroove$urlPrefix = 'http://elm-in-action.com/';
+var $author$project$PhotoGroove$ClickedSize = function (a) {
+	return {$: 'ClickedSize', a: a};
+};
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $author$project$PhotoGroove$viewSizeChooser = function (size) {
 	return A2(
 		$elm$html$Html$label,
@@ -10614,7 +10623,9 @@ var $author$project$PhotoGroove$viewSizeChooser = function (size) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$type_('radio'),
-						$elm$html$Html$Attributes$name('size')
+						$elm$html$Html$Attributes$name('size'),
+						$elm$html$Html$Events$onClick(
+						$author$project$PhotoGroove$ClickedSize(size))
 					]),
 				_List_Nil),
 				$elm$html$Html$text(
@@ -10715,7 +10726,9 @@ var $author$project$PhotoGroove$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$id('thumbnails')
+						$elm$html$Html$Attributes$id('thumbnails'),
+						$elm$html$Html$Attributes$class(
+						$author$project$PhotoGroove$sizeToString(model.chosenSize))
 					]),
 				A2(
 					$elm$core$List$map,
@@ -10734,4 +10747,4 @@ var $author$project$PhotoGroove$view = function (model) {
 var $author$project$PhotoGroove$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$PhotoGroove$initialModel, update: $author$project$PhotoGroove$update, view: $author$project$PhotoGroove$view});
 _Platform_export({'PhotoGroove':{'init':$author$project$PhotoGroove$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoGroove.Msg","aliases":{},"unions":{"PhotoGroove.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"ClickedSurpriseMe":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoGroove.Msg","aliases":{},"unions":{"PhotoGroove.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"ClickedSize":["PhotoGroove.ThumbnailSize"],"ClickedSurpriseMe":[]}},"String.String":{"args":[],"tags":{"String":[]}},"PhotoGroove.ThumbnailSize":{"args":[],"tags":{"Small":[],"Medium":[],"Large":[]}}}}})}});}(this));
