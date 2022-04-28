@@ -123,8 +123,8 @@ getPhotos model result =
     case result of
         Ok responseStr ->
             case String.split "," responseStr of
+                -- same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
                 (firstUrl :: _) as urls ->
-                    -- same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
                     let
                         photos =
                             List.map (\url -> { url = url }) urls
