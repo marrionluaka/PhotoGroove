@@ -4,6 +4,7 @@ import Browser
 import Html exposing (button, div, h1, h3, img, input, label, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
+import Http
 import Random
 
 
@@ -64,6 +65,7 @@ type Msg
     | ClickedSize ThumbnailSize
     | ClickedSurpriseMe
     | GotRandomPhoto Photo
+    | GotPhotos (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -80,6 +82,9 @@ update msg model =
 
         GotRandomPhoto photo ->
             ( { model | status = selectUrl photo.url model.status }, Cmd.none )
+
+        GotPhotos result ->
+            getPhotos model result
 
 
 selectUrl : String -> Status -> Status
@@ -111,6 +116,26 @@ randomPhotoPicker model =
 
         Errored _ ->
             ( model, Cmd.none )
+
+
+getPhotos : Model -> Result Http.Error String -> ( Model, Cmd Msg )
+getPhotos model result =
+    case result of
+        Ok responseStr ->
+            case String.split "," responseStr of
+                (firstUrl :: _) as urls ->
+                    -- same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
+                    let
+                        photos =
+                            List.map (\url -> { url = url }) urls
+                    in
+                    ( { model | status = Loaded photos firstUrl }, Cmd.none )
+
+                [] ->
+                    ( { model | status = Errored "0 photos found" }, Cmd.none )
+
+        Err httpError ->
+            ( { model | status = Errored "Server error!" }, Cmd.none )
 
 
 

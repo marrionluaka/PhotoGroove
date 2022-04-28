@@ -10588,6 +10588,54 @@ var $author$project$PhotoGroove$initialModel = {chosenSize: $author$project$Phot
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$PhotoGroove$subscriptions = $elm$core$Platform$Sub$none;
+var $author$project$PhotoGroove$Errored = function (a) {
+	return {$: 'Errored', a: a};
+};
+var $author$project$PhotoGroove$Loaded = F2(
+	function (a, b) {
+		return {$: 'Loaded', a: a, b: b};
+	});
+var $author$project$PhotoGroove$getPhotos = F2(
+	function (model, result) {
+		if (result.$ === 'Ok') {
+			var responseStr = result.a;
+			var _v1 = A2($elm$core$String$split, ',', responseStr);
+			if (_v1.b) {
+				var urls = _v1;
+				var firstUrl = urls.a;
+				var photos = A2(
+					$elm$core$List$map,
+					function (url) {
+						return {url: url};
+					},
+					urls);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							status: A2($author$project$PhotoGroove$Loaded, photos, firstUrl)
+						}),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							status: $author$project$PhotoGroove$Errored('0 photos found')
+						}),
+					$elm$core$Platform$Cmd$none);
+			}
+		} else {
+			var httpError = result.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						status: $author$project$PhotoGroove$Errored('Server error!')
+					}),
+				$elm$core$Platform$Cmd$none);
+		}
+	});
 var $author$project$PhotoGroove$GotRandomPhoto = function (a) {
 	return {$: 'GotRandomPhoto', a: a};
 };
@@ -10804,10 +10852,6 @@ var $author$project$PhotoGroove$randomPhotoPicker = function (model) {
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	}
 };
-var $author$project$PhotoGroove$Loaded = F2(
-	function (a, b) {
-		return {$: 'Loaded', a: a, b: b};
-	});
 var $author$project$PhotoGroove$selectUrl = F2(
 	function (url, status) {
 		switch (status.$) {
@@ -10841,7 +10885,7 @@ var $author$project$PhotoGroove$update = F2(
 						model,
 						{chosenSize: size}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'GotRandomPhoto':
 				var photo = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -10850,6 +10894,9 @@ var $author$project$PhotoGroove$update = F2(
 							status: A2($author$project$PhotoGroove$selectUrl, photo.url, model.status)
 						}),
 					$elm$core$Platform$Cmd$none);
+			default:
+				var result = msg.a;
+				return A2($author$project$PhotoGroove$getPhotos, model, result);
 		}
 	});
 var $author$project$PhotoGroove$Large = {$: 'Large'};
@@ -11055,4 +11102,4 @@ var $author$project$PhotoGroove$main = $elm$browser$Browser$element(
 		view: $author$project$PhotoGroove$view
 	});
 _Platform_export({'PhotoGroove':{'init':$author$project$PhotoGroove$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoGroove.Msg","aliases":{"PhotoGroove.Photo":{"args":[],"type":"{ url : String.String }"}},"unions":{"PhotoGroove.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"ClickedSize":["PhotoGroove.ThumbnailSize"],"ClickedSurpriseMe":[],"GotRandomPhoto":["PhotoGroove.Photo"]}},"String.String":{"args":[],"tags":{"String":[]}},"PhotoGroove.ThumbnailSize":{"args":[],"tags":{"Small":[],"Medium":[],"Large":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoGroove.Msg","aliases":{"PhotoGroove.Photo":{"args":[],"type":"{ url : String.String }"}},"unions":{"PhotoGroove.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"ClickedSize":["PhotoGroove.ThumbnailSize"],"ClickedSurpriseMe":[],"GotRandomPhoto":["PhotoGroove.Photo"],"GotPhotos":["Result.Result Http.Error String.String"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"PhotoGroove.ThumbnailSize":{"args":[],"tags":{"Small":[],"Medium":[],"Large":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});}(this));
