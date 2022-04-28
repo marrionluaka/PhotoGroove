@@ -10582,22 +10582,14 @@ var $elm$core$Basics$never = function (_v0) {
 	}
 };
 var $elm$browser$Browser$element = _Browser_element;
+var $author$project$PhotoGroove$Loading = {$: 'Loading'};
 var $author$project$PhotoGroove$Medium = {$: 'Medium'};
-var $author$project$PhotoGroove$initialModel = {
-	chosenSize: $author$project$PhotoGroove$Medium,
-	photos: _List_fromArray(
-		[
-			{url: '1.jpeg'},
-			{url: '2.jpeg'},
-			{url: '3.jpeg'}
-		]),
-	selectedUrl: '1.jpeg'
-};
+var $author$project$PhotoGroove$initialModel = {chosenSize: $author$project$PhotoGroove$Medium, status: $author$project$PhotoGroove$Loading};
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$PhotoGroove$subscriptions = $elm$core$Platform$Sub$none;
-var $author$project$PhotoGroove$GotSelectedIndex = function (a) {
-	return {$: 'GotSelectedIndex', a: a};
+var $author$project$PhotoGroove$GotRandomPhoto = function (a) {
+	return {$: 'GotRandomPhoto', a: a};
 };
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
@@ -10705,15 +10697,15 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
-var $author$project$PhotoGroove$photoArray = $elm$core$Array$fromList($author$project$PhotoGroove$initialModel.photos);
-var $author$project$PhotoGroove$getPhotoUrl = function (index) {
-	var _v0 = A2($elm$core$Array$get, index, $author$project$PhotoGroove$photoArray);
-	if (_v0.$ === 'Just') {
-		var photo = _v0.a;
-		return photo.url;
-	} else {
-		return '';
-	}
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $elm$random$Random$addOne = function (value) {
+	return _Utils_Tuple2(1, value);
+};
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
 };
 var $elm$core$Bitwise$xor = _Bitwise_xor;
 var $elm$random$Random$peel = function (_v0) {
@@ -10721,42 +10713,113 @@ var $elm$random$Random$peel = function (_v0) {
 	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
 	return ((word >>> 22) ^ word) >>> 0;
 };
-var $elm$random$Random$int = F2(
+var $elm$random$Random$float = F2(
 	function (a, b) {
 		return $elm$random$Random$Generator(
 			function (seed0) {
-				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _v0.a;
-				var hi = _v0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
-						$elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = $elm$random$Random$peel(seed);
-							var seedN = $elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
+				var seed1 = $elm$random$Random$next(seed0);
+				var range = $elm$core$Basics$abs(b - a);
+				var n1 = $elm$random$Random$peel(seed1);
+				var n0 = $elm$random$Random$peel(seed0);
+				var lo = (134217727 & n1) * 1.0;
+				var hi = (67108863 & n0) * 1.0;
+				var val = ((hi * 134217728.0) + lo) / 9007199254740992.0;
+				var scaled = (val * range) + a;
+				return _Utils_Tuple2(
+					scaled,
+					$elm$random$Random$next(seed1));
 			});
 	});
-var $author$project$PhotoGroove$randomPhotoPicker = A2(
-	$elm$random$Random$int,
-	0,
-	$elm$core$Array$length($author$project$PhotoGroove$photoArray) - 1);
+var $elm$random$Random$getByWeight = F3(
+	function (_v0, others, countdown) {
+		getByWeight:
+		while (true) {
+			var weight = _v0.a;
+			var value = _v0.b;
+			if (!others.b) {
+				return value;
+			} else {
+				var second = others.a;
+				var otherOthers = others.b;
+				if (_Utils_cmp(
+					countdown,
+					$elm$core$Basics$abs(weight)) < 1) {
+					return value;
+				} else {
+					var $temp$_v0 = second,
+						$temp$others = otherOthers,
+						$temp$countdown = countdown - $elm$core$Basics$abs(weight);
+					_v0 = $temp$_v0;
+					others = $temp$others;
+					countdown = $temp$countdown;
+					continue getByWeight;
+				}
+			}
+		}
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $elm$random$Random$weighted = F2(
+	function (first, others) {
+		var normalize = function (_v0) {
+			var weight = _v0.a;
+			return $elm$core$Basics$abs(weight);
+		};
+		var total = normalize(first) + $elm$core$List$sum(
+			A2($elm$core$List$map, normalize, others));
+		return A2(
+			$elm$random$Random$map,
+			A2($elm$random$Random$getByWeight, first, others),
+			A2($elm$random$Random$float, 0, total));
+	});
+var $elm$random$Random$uniform = F2(
+	function (value, valueList) {
+		return A2(
+			$elm$random$Random$weighted,
+			$elm$random$Random$addOne(value),
+			A2($elm$core$List$map, $elm$random$Random$addOne, valueList));
+	});
+var $author$project$PhotoGroove$randomPhotoPicker = function (model) {
+	var _v0 = model.status;
+	switch (_v0.$) {
+		case 'Loaded':
+			if (_v0.a.b) {
+				var _v1 = _v0.a;
+				var firstPhoto = _v1.a;
+				var otherPhotos = _v1.b;
+				return A2(
+					$elm$core$Tuple$pair,
+					model,
+					A2(
+						$elm$random$Random$generate,
+						$author$project$PhotoGroove$GotRandomPhoto,
+						A2($elm$random$Random$uniform, firstPhoto, otherPhotos)));
+			} else {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
+		case 'Loading':
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		default:
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	}
+};
+var $author$project$PhotoGroove$Loaded = F2(
+	function (a, b) {
+		return {$: 'Loaded', a: a, b: b};
+	});
+var $author$project$PhotoGroove$selectUrl = F2(
+	function (url, status) {
+		switch (status.$) {
+			case 'Loaded':
+				var photos = status.a;
+				return A2($author$project$PhotoGroove$Loaded, photos, url);
+			case 'Loading':
+				return status;
+			default:
+				return status;
+		}
+	});
 var $author$project$PhotoGroove$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -10765,12 +10828,12 @@ var $author$project$PhotoGroove$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{selectedUrl: url}),
+						{
+							status: A2($author$project$PhotoGroove$selectUrl, url, model.status)
+						}),
 					$elm$core$Platform$Cmd$none);
 			case 'ClickedSurpriseMe':
-				return _Utils_Tuple2(
-					model,
-					A2($elm$random$Random$generate, $author$project$PhotoGroove$GotSelectedIndex, $author$project$PhotoGroove$randomPhotoPicker));
+				return $author$project$PhotoGroove$randomPhotoPicker(model);
 			case 'ClickedSize':
 				var size = msg.a;
 				return _Utils_Tuple2(
@@ -10779,12 +10842,12 @@ var $author$project$PhotoGroove$update = F2(
 						{chosenSize: size}),
 					$elm$core$Platform$Cmd$none);
 			default:
-				var index = msg.a;
+				var photo = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							selectedUrl: $author$project$PhotoGroove$getPhotoUrl(index)
+							status: A2($author$project$PhotoGroove$selectUrl, photo.url, model.status)
 						}),
 					$elm$core$Platform$Cmd$none);
 		}
@@ -10903,14 +10966,9 @@ var $author$project$PhotoGroove$viewThumbnail = F2(
 				]),
 			_List_Nil);
 	});
-var $author$project$PhotoGroove$view = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('content')
-			]),
-		_List_fromArray(
+var $author$project$PhotoGroove$viewLoaded = F3(
+	function (photos, selectedUrl, chosenSize) {
+		return _List_fromArray(
 			[
 				A2(
 				$elm$html$Html$h1,
@@ -10935,7 +10993,7 @@ var $author$project$PhotoGroove$view = function (model) {
 					]),
 				A2(
 					$elm$core$List$map,
-					$author$project$PhotoGroove$viewSizeChooser(model.chosenSize),
+					$author$project$PhotoGroove$viewSizeChooser(chosenSize),
 					_List_fromArray(
 						[$author$project$PhotoGroove$Small, $author$project$PhotoGroove$Medium, $author$project$PhotoGroove$Large]))),
 				A2(
@@ -10944,21 +11002,46 @@ var $author$project$PhotoGroove$view = function (model) {
 					[
 						$elm$html$Html$Attributes$id('thumbnails'),
 						$elm$html$Html$Attributes$class(
-						$author$project$PhotoGroove$sizeToString(model.chosenSize))
+						$author$project$PhotoGroove$sizeToString(chosenSize))
 					]),
 				A2(
 					$elm$core$List$map,
-					$author$project$PhotoGroove$viewThumbnail(model.selectedUrl),
-					model.photos)),
+					$author$project$PhotoGroove$viewThumbnail(selectedUrl),
+					photos)),
 				A2(
 				$elm$html$Html$img,
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('large'),
-						$elm$html$Html$Attributes$src($author$project$PhotoGroove$urlPrefix + ('large/' + model.selectedUrl))
+						$elm$html$Html$Attributes$src($author$project$PhotoGroove$urlPrefix + ('large/' + selectedUrl))
 					]),
 				_List_Nil)
-			]));
+			]);
+	});
+var $author$project$PhotoGroove$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('content')
+			]),
+		function () {
+			var _v0 = model.status;
+			switch (_v0.$) {
+				case 'Loaded':
+					var photos = _v0.a;
+					var selectedUrl = _v0.b;
+					return A3($author$project$PhotoGroove$viewLoaded, photos, selectedUrl, model.chosenSize);
+				case 'Loading':
+					return _List_Nil;
+				default:
+					var errorMessage = _v0.a;
+					return _List_fromArray(
+						[
+							$elm$html$Html$text('Error: ' + errorMessage)
+						]);
+			}
+		}());
 };
 var $author$project$PhotoGroove$main = $elm$browser$Browser$element(
 	{
@@ -10972,4 +11055,4 @@ var $author$project$PhotoGroove$main = $elm$browser$Browser$element(
 		view: $author$project$PhotoGroove$view
 	});
 _Platform_export({'PhotoGroove':{'init':$author$project$PhotoGroove$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoGroove.Msg","aliases":{},"unions":{"PhotoGroove.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"ClickedSize":["PhotoGroove.ThumbnailSize"],"ClickedSurpriseMe":[],"GotSelectedIndex":["Basics.Int"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}},"PhotoGroove.ThumbnailSize":{"args":[],"tags":{"Small":[],"Medium":[],"Large":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoGroove.Msg","aliases":{"PhotoGroove.Photo":{"args":[],"type":"{ url : String.String }"}},"unions":{"PhotoGroove.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"ClickedSize":["PhotoGroove.ThumbnailSize"],"ClickedSurpriseMe":[],"GotRandomPhoto":["PhotoGroove.Photo"]}},"String.String":{"args":[],"tags":{"String":[]}},"PhotoGroove.ThumbnailSize":{"args":[],"tags":{"Small":[],"Medium":[],"Large":[]}}}}})}});}(this));
