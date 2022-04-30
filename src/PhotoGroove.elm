@@ -11,7 +11,7 @@ import Random
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \_ -> ( initialModel, Cmd.none )
+        { init = \_ -> ( initialModel, initialCmd )
         , view = view
         , update = update
         , subscriptions = \_ -> subscriptions
@@ -56,6 +56,14 @@ initialModel =
     }
 
 
+initialCmd : Cmd Msg
+initialCmd =
+    Http.get
+        { url = "http://elm-in-action.com/photos/list"
+        , expect = Http.expectString GotPhotos
+        }
+
+
 
 -- Update
 
@@ -83,8 +91,11 @@ update msg model =
         GotRandomPhoto photo ->
             ( { model | status = selectUrl photo.url model.status }, Cmd.none )
 
-        GotPhotos result ->
-            getPhotos model result
+        GotPhotos (Ok responseStr) ->
+            getPhotos model responseStr
+
+        GotPhotos (Err _) ->
+            ( model, Cmd.none )
 
 
 selectUrl : String -> Status -> Status
@@ -118,24 +129,19 @@ randomPhotoPicker model =
             ( model, Cmd.none )
 
 
-getPhotos : Model -> Result Http.Error String -> ( Model, Cmd Msg )
-getPhotos model result =
-    case result of
-        Ok responseStr ->
-            case String.split "," responseStr of
-                -- same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
-                (firstUrl :: _) as urls ->
-                    let
-                        photos =
-                            List.map (\url -> { url = url }) urls
-                    in
-                    ( { model | status = Loaded photos firstUrl }, Cmd.none )
+getPhotos : Model -> String -> ( Model, Cmd Msg )
+getPhotos model responseStr =
+    case String.split "," responseStr of
+        -- same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
+        (firstUrl :: _) as urls ->
+            let
+                photos =
+                    List.map Photo urls
+            in
+            ( { model | status = Loaded photos firstUrl }, Cmd.none )
 
-                [] ->
-                    ( { model | status = Errored "0 photos found" }, Cmd.none )
-
-        Err httpError ->
-            ( { model | status = Errored "Server error!" }, Cmd.none )
+        [] ->
+            ( { model | status = Errored "0 photos found" }, Cmd.none )
 
 
 
