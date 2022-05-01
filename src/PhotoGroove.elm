@@ -35,6 +35,18 @@ type alias Model =
     }
 
 
+type ThumbnailSize
+    = Small
+    | Medium
+    | Large
+
+
+type Status
+    = Loading
+    | Loaded (List Photo) String
+    | Errored String
+
+
 type alias Photo =
     { url : String
     , size : Int
@@ -48,18 +60,6 @@ photoDecoder =
         |> required "url" string
         |> required "size" int
         |> optional "title" string "(untitled)"
-
-
-type ThumbnailSize
-    = Small
-    | Medium
-    | Large
-
-
-type Status
-    = Loading
-    | Loaded (List Photo) String
-    | Errored String
 
 
 initialModel : Model
