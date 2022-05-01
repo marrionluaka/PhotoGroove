@@ -2,9 +2,11 @@ module PhotoGroove exposing (main)
 
 import Browser
 import Html exposing (button, div, h1, h3, img, input, label, text)
-import Html.Attributes exposing (..)
+import Html.Attributes exposing (checked, class, classList, id, name, src, title, type_)
 import Html.Events exposing (onClick, onInput)
 import Http
+import Json.Decode exposing (Decoder, int, list, string, succeed)
+import Json.Decode.Pipeline exposing (optional, required)
 import Random
 
 
@@ -34,7 +36,18 @@ type alias Model =
 
 
 type alias Photo =
-    { url : String }
+    { url : String
+    , size : Int
+    , title : String
+    }
+
+
+photoDecoder : Decoder Photo
+photoDecoder =
+    succeed Photo
+        |> required "url" string
+        |> required "size" int
+        |> optional "title" string "(untitled)"
 
 
 type ThumbnailSize
@@ -59,8 +72,8 @@ initialModel =
 initialCmd : Cmd Msg
 initialCmd =
     Http.get
-        { url = "http://elm-in-action.com/photos/list"
-        , expect = Http.expectString GotPhotos
+        { url = "http://elm-in-action.com/photos/list.json"
+        , expect = Http.expectJson GotPhotos (list photoDecoder)
         }
 
 
@@ -73,7 +86,7 @@ type Msg
     | ClickedSize ThumbnailSize
     | ClickedSurpriseMe
     | GotRandomPhoto Photo
-    | GotPhotos (Result Http.Error String)
+    | GotPhotos (Result Http.Error (List Photo))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -91,8 +104,8 @@ update msg model =
         GotRandomPhoto photo ->
             ( { model | status = selectUrl photo.url model.status }, Cmd.none )
 
-        GotPhotos (Ok responseStr) ->
-            getPhotos model responseStr
+        GotPhotos (Ok photos) ->
+            getPhotos model photos
 
         GotPhotos (Err _) ->
             ( model, Cmd.none )
@@ -117,6 +130,8 @@ randomPhotoPicker model =
         Loaded (firstPhoto :: otherPhotos) _ ->
             Random.uniform firstPhoto otherPhotos
                 |> Random.generate GotRandomPhoto
+                -- ^Once the photo selected, it'll trigger the GotRandomPhoto msg which will do the selection for you.
+                -- The Elm runtime will handle the side effects, you just need to focus on the pure aspect of the code.
                 |> Tuple.pair model
 
         Loaded [] _ ->
@@ -129,16 +144,12 @@ randomPhotoPicker model =
             ( model, Cmd.none )
 
 
-getPhotos : Model -> String -> ( Model, Cmd Msg )
-getPhotos model responseStr =
-    case String.split "," responseStr of
-        -- same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
-        (firstUrl :: _) as urls ->
-            let
-                photos =
-                    List.map Photo urls
-            in
-            ( { model | status = Loaded photos firstUrl }, Cmd.none )
+getPhotos : Model -> List Photo -> ( Model, Cmd Msg )
+getPhotos model photos =
+    case photos of
+        -- `(firstUrl :: _) as urls` is the same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
+        first :: rest ->
+            ( { model | status = Loaded photos first.url }, Cmd.none )
 
         [] ->
             ( { model | status = Errored "0 photos found" }, Cmd.none )
@@ -223,6 +234,7 @@ viewThumbnail : String -> Photo -> Html.Html Msg
 viewThumbnail selectedUrl thumb =
     img
         [ src (urlPrefix ++ thumb.url)
+        , title (thumb.title ++ " [" ++ String.fromInt thumb.size ++ " KB]")
         , classList [ ( "selected", selectedUrl == thumb.url ) ]
         , onClick (ClickedPhoto thumb.url)
         ]
