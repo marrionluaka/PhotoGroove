@@ -7,10 +7,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PhotoGroove</title>
   <link rel="stylesheet" href="styles.css" type="text/css" />
+  <link rel="stylesheet" href="http://elm-in-action.com/range-slider.css">
+  <script src="http://elm-in-action.com/range-slider.js"></script>
   <script>
     class RangeSlider extends HTMLElement {
       connectedCallback() {
-        this.appendChild(document.createElement('input'))
+        const input = document.createElement('input')
+        this.appendChild(input)
+
+        const jsr = new JSR(input, {
+          max: this.max,
+          values: [this.val], // Uses Attr.property "val" we set in Elm
+          sliders: 1,
+          grid: false
+        })
       }
     }
 
