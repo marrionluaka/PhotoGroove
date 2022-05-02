@@ -1,12 +1,13 @@
 module PhotoGroove exposing (main)
 
 import Browser
-import Html exposing (button, div, h1, h3, img, input, label, text)
-import Html.Attributes exposing (checked, class, classList, id, name, src, title, type_)
+import Html exposing (Attribute, button, div, h1, h3, img, input, label, node, text)
+import Html.Attributes as Attr exposing (checked, class, classList, id, name, src, title, type_)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode exposing (Decoder, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
+import Json.Encode as Encode
 import Random
 
 
@@ -182,6 +183,11 @@ viewLoaded : List Photo -> String -> ThumbnailSize -> List (Html.Html Msg)
 viewLoaded photos selectedUrl chosenSize =
     [ h1 [] [ text "Photo Groove" ]
     , viewSurpriseMeBtn
+    , div [ class "filters" ]
+        [ viewFilter "Hue" 0
+        , viewFilter "Ripple" 0
+        , viewFilter "Noise" 0
+        ]
     , h3 [] [ text "Thumbnail Size:" ]
     , div [ id "choose-size" ]
         (List.map (viewSizeChooser chosenSize) [ Small, Medium, Large ])
@@ -239,3 +245,21 @@ viewThumbnail selectedUrl thumb =
         , onClick (ClickedPhoto thumb.url)
         ]
         []
+
+
+viewFilter : String -> Int -> Html.Html Msg
+viewFilter name magnitude =
+    div [ class "filter-slider" ]
+        [ label [] [ text name ]
+        , rangeSlider
+            [ Attr.max "11"
+            , Attr.property "val" (Encode.int magnitude)
+            ]
+            []
+        , label [] [ text (String.fromInt magnitude) ]
+        ]
+
+
+rangeSlider : List (Attribute msg) -> List (Html.Html msg) -> Html.Html msg
+rangeSlider attributes children =
+    node "range-slider" attributes children

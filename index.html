@@ -7,6 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PhotoGroove</title>
   <link rel="stylesheet" href="styles.css" type="text/css" />
+  <script>
+    class RangeSlider extends HTMLElement {
+      connectedCallback() {
+        this.appendChild(document.createElement('input'))
+      }
+    }
+
+    window.customElements.define('range-slider', RangeSlider)
+  </script>
 </head>
 
 <body>
