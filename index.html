@@ -22,11 +22,8 @@
           grid: false
         })
 
-        const rangeSliderNode = this
-
         jsr.addEventListener('update', (elem, value) => {
-          const event = new CustomEvent('slide', { detail: { userSlidTo: value } })
-          rangeSliderNode.dispatchEvent(event)
+          this.dispatchEvent(new CustomEvent('slide', { detail: { userSlidTo: value } }))
         })
       }
     }
@@ -39,7 +36,7 @@
   <main id="app"></main>
   <script src="index.js"></script>
   <script>
-    Elm.PhotoGroove.init({ node: document.getElementById("app") })
+    const app = Elm.PhotoGroove.init({ node: document.getElementById("app") })
   </script>
 </body>
 

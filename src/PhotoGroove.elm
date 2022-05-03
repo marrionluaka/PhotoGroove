@@ -1,4 +1,4 @@
-module PhotoGroove exposing (main)
+port module PhotoGroove exposing (main)
 
 import Browser
 import Html exposing (Attribute, button, div, h1, h3, img, input, label, node, text)
@@ -49,6 +49,15 @@ type Status
     = Loading
     | Loaded (List Photo) String
     | Errored String
+
+
+port setFilters : FilterOptions -> Cmd msg
+
+
+type alias FilterOptions =
+    { url : String
+    , filters : List { name : String, amount : Int }
+    }
 
 
 type alias Photo =
@@ -103,7 +112,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ClickedPhoto url ->
-            ( { model | status = selectUrl url model.status }, Cmd.none )
+            applyFilters { model | status = selectUrl url model.status }
 
         ClickedSurpriseMe ->
             randomPhotoPicker model
@@ -112,22 +121,45 @@ update msg model =
             ( { model | chosenSize = size }, Cmd.none )
 
         GotRandomPhoto photo ->
-            ( { model | status = selectUrl photo.url model.status }, Cmd.none )
+            applyFilters { model | status = selectUrl photo.url model.status }
 
         GotPhotos (Ok photos) ->
             getPhotos model photos
 
         GotPhotos (Err _) ->
             ( model, Cmd.none )
-        
+
         SlidHue hue ->
-            ({ model | hue = hue }, Cmd.none)
-        
+            ( { model | hue = hue }, Cmd.none )
+
         SlidRipple ripple ->
-            ({ model | ripple = ripple }, Cmd.none)
-        
+            ( { model | ripple = ripple }, Cmd.none )
+
         SlidNoise noise ->
-            ({ model | noise = noise }, Cmd.none)
+            ( { model | noise = noise }, Cmd.none )
+
+
+applyFilters : Model -> ( Model, Cmd Msg )
+applyFilters model =
+    case model.status of
+        Loaded photos selectedUrl ->
+            let
+                filters =
+                    [ { name = "Hue", amount = model.hue }
+                    , { name = "Ripple", amount = model.ripple }
+                    , { name = "Noise", amount = model.noise }
+                    ]
+
+                url =
+                    urlPrefix ++ "large/" ++ selectedUrl
+            in
+            ( model, setFilters { url = url, filters = filters } )
+
+        Loading ->
+            ( model, Cmd.none )
+
+        Errored _ ->
+            ( model, Cmd.none )
 
 
 selectUrl : String -> Status -> Status

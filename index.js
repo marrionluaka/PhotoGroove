@@ -11099,6 +11099,57 @@ var $author$project$PhotoGroove$initialModel = {chosenSize: $author$project$Phot
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$PhotoGroove$subscriptions = $elm$core$Platform$Sub$none;
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $author$project$PhotoGroove$setFilters = _Platform_outgoingPort(
+	'setFilters',
+	function ($) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'filters',
+					$elm$json$Json$Encode$list(
+						function ($) {
+							return $elm$json$Json$Encode$object(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'amount',
+										$elm$json$Json$Encode$int($.amount)),
+										_Utils_Tuple2(
+										'name',
+										$elm$json$Json$Encode$string($.name))
+									]));
+						})($.filters)),
+					_Utils_Tuple2(
+					'url',
+					$elm$json$Json$Encode$string($.url))
+				]));
+	});
+var $author$project$PhotoGroove$urlPrefix = 'http://elm-in-action.com/';
+var $author$project$PhotoGroove$applyFilters = function (model) {
+	var _v0 = model.status;
+	switch (_v0.$) {
+		case 'Loaded':
+			var photos = _v0.a;
+			var selectedUrl = _v0.b;
+			var url = $author$project$PhotoGroove$urlPrefix + ('large/' + selectedUrl);
+			var filters = _List_fromArray(
+				[
+					{amount: model.hue, name: 'Hue'},
+					{amount: model.ripple, name: 'Ripple'},
+					{amount: model.noise, name: 'Noise'}
+				]);
+			return _Utils_Tuple2(
+				model,
+				$author$project$PhotoGroove$setFilters(
+					{filters: filters, url: url}));
+		case 'Loading':
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		default:
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	}
+};
 var $author$project$PhotoGroove$Errored = function (a) {
 	return {$: 'Errored', a: a};
 };
@@ -11361,13 +11412,12 @@ var $author$project$PhotoGroove$update = F2(
 		switch (msg.$) {
 			case 'ClickedPhoto':
 				var url = msg.a;
-				return _Utils_Tuple2(
+				return $author$project$PhotoGroove$applyFilters(
 					_Utils_update(
 						model,
 						{
 							status: A2($author$project$PhotoGroove$selectUrl, url, model.status)
-						}),
-					$elm$core$Platform$Cmd$none);
+						}));
 			case 'ClickedSurpriseMe':
 				return $author$project$PhotoGroove$randomPhotoPicker(model);
 			case 'ClickedSize':
@@ -11379,13 +11429,12 @@ var $author$project$PhotoGroove$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'GotRandomPhoto':
 				var photo = msg.a;
-				return _Utils_Tuple2(
+				return $author$project$PhotoGroove$applyFilters(
 					_Utils_update(
 						model,
 						{
 							status: A2($author$project$PhotoGroove$selectUrl, photo.url, model.status)
-						}),
-					$elm$core$Platform$Cmd$none);
+						}));
 			case 'GotPhotos':
 				if (msg.a.$ === 'Ok') {
 					var photos = msg.a.a;
@@ -11446,8 +11495,6 @@ var $elm$html$Html$Attributes$src = function (url) {
 		'src',
 		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
-var $author$project$PhotoGroove$urlPrefix = 'http://elm-in-action.com/';
-var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$PhotoGroove$onSlide = function (toMsg) {
 	return A2(
