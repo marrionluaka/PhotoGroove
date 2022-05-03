@@ -11099,7 +11099,7 @@ var $author$project$PhotoGroove$initialModel = {chosenSize: $author$project$Phot
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$PhotoGroove$subscriptions = $elm$core$Platform$Sub$none;
-var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$float = _Json_wrap;
 var $author$project$PhotoGroove$setFilters = _Platform_outgoingPort(
 	'setFilters',
 	function ($) {
@@ -11115,7 +11115,7 @@ var $author$project$PhotoGroove$setFilters = _Platform_outgoingPort(
 									[
 										_Utils_Tuple2(
 										'amount',
-										$elm$json$Json$Encode$int($.amount)),
+										$elm$json$Json$Encode$float($.amount)),
 										_Utils_Tuple2(
 										'name',
 										$elm$json$Json$Encode$string($.name))
@@ -11131,14 +11131,13 @@ var $author$project$PhotoGroove$applyFilters = function (model) {
 	var _v0 = model.status;
 	switch (_v0.$) {
 		case 'Loaded':
-			var photos = _v0.a;
 			var selectedUrl = _v0.b;
 			var url = $author$project$PhotoGroove$urlPrefix + ('large/' + selectedUrl);
 			var filters = _List_fromArray(
 				[
-					{amount: model.hue, name: 'Hue'},
-					{amount: model.ripple, name: 'Ripple'},
-					{amount: model.noise, name: 'Noise'}
+					{amount: model.hue / 11, name: 'Hue'},
+					{amount: model.ripple / 11, name: 'Ripple'},
+					{amount: model.noise / 11, name: 'Noise'}
 				]);
 			return _Utils_Tuple2(
 				model,
@@ -11451,18 +11450,16 @@ var $author$project$PhotoGroove$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'SlidRipple':
 				var ripple = msg.a;
-				return _Utils_Tuple2(
+				return $author$project$PhotoGroove$applyFilters(
 					_Utils_update(
 						model,
-						{ripple: ripple}),
-					$elm$core$Platform$Cmd$none);
+						{ripple: ripple}));
 			default:
 				var noise = msg.a;
-				return _Utils_Tuple2(
+				return $author$project$PhotoGroove$applyFilters(
 					_Utils_update(
 						model,
-						{noise: noise}),
-					$elm$core$Platform$Cmd$none);
+						{noise: noise}));
 		}
 	});
 var $author$project$PhotoGroove$Large = {$: 'Large'};
@@ -11476,9 +11473,9 @@ var $author$project$PhotoGroove$SlidRipple = function (a) {
 	return {$: 'SlidRipple', a: a};
 };
 var $author$project$PhotoGroove$Small = {$: 'Small'};
+var $elm$html$Html$canvas = _VirtualDom_node('canvas');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
-var $elm$html$Html$img = _VirtualDom_node('img');
 var $author$project$PhotoGroove$sizeToString = function (size) {
 	switch (size.$) {
 		case 'Small':
@@ -11489,12 +11486,7 @@ var $author$project$PhotoGroove$sizeToString = function (size) {
 			return 'large';
 	}
 };
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
+var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$PhotoGroove$onSlide = function (toMsg) {
 	return A2(
@@ -11631,6 +11623,13 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
+var $elm$html$Html$img = _VirtualDom_node('img');
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
 var $author$project$PhotoGroove$viewThumbnail = F2(
 	function (selectedUrl, thumb) {
 		return A2(
@@ -11708,11 +11707,11 @@ var $author$project$PhotoGroove$viewLoaded = F3(
 					$author$project$PhotoGroove$viewThumbnail(selectedUrl),
 					photos)),
 				A2(
-				$elm$html$Html$img,
+				$elm$html$Html$canvas,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('large'),
-						$elm$html$Html$Attributes$src($author$project$PhotoGroove$urlPrefix + ('large/' + selectedUrl))
+						$elm$html$Html$Attributes$id('main-canvas'),
+						$elm$html$Html$Attributes$class('large')
 					]),
 				_List_Nil)
 			]);

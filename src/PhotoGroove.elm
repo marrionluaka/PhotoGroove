@@ -1,7 +1,7 @@
 port module PhotoGroove exposing (main)
 
 import Browser
-import Html exposing (Attribute, button, div, h1, h3, img, input, label, node, text)
+import Html exposing (Attribute, button, canvas, div, h1, h3, img, input, label, node, text)
 import Html.Attributes as Attr exposing (checked, class, classList, id, name, src, title, type_)
 import Html.Events exposing (on, onClick)
 import Http
@@ -56,7 +56,7 @@ port setFilters : FilterOptions -> Cmd msg
 
 type alias FilterOptions =
     { url : String
-    , filters : List { name : String, amount : Int }
+    , filters : List { name : String, amount : Float }
     }
 
 
@@ -133,21 +133,21 @@ update msg model =
             ( { model | hue = hue }, Cmd.none )
 
         SlidRipple ripple ->
-            ( { model | ripple = ripple }, Cmd.none )
+            applyFilters { model | ripple = ripple }
 
         SlidNoise noise ->
-            ( { model | noise = noise }, Cmd.none )
+            applyFilters { model | noise = noise }
 
 
 applyFilters : Model -> ( Model, Cmd Msg )
 applyFilters model =
     case model.status of
-        Loaded photos selectedUrl ->
+        Loaded _ selectedUrl ->
             let
                 filters =
-                    [ { name = "Hue", amount = model.hue }
-                    , { name = "Ripple", amount = model.ripple }
-                    , { name = "Noise", amount = model.noise }
+                    [ { name = "Hue", amount = toFloat model.hue / 11 }
+                    , { name = "Ripple", amount = toFloat model.ripple / 11 }
+                    , { name = "Noise", amount = toFloat model.noise / 11 }
                     ]
 
                 url =
@@ -242,10 +242,8 @@ viewLoaded photos selectedUrl model =
     , div [ id "choose-size" ]
         (List.map (viewSizeChooser model.chosenSize) [ Small, Medium, Large ])
     , div [ id "thumbnails", class <| sizeToString model.chosenSize ] (List.map (viewThumbnail selectedUrl) photos)
-    , img
-        [ class "large"
-        , src (urlPrefix ++ "large/" ++ selectedUrl)
-        ]
+    , canvas
+        [ id "main-canvas", class "large" ]
         []
     ]
 
