@@ -11,19 +11,22 @@ import Json.Encode as Encode
 import Random
 
 
-main : Program () Model Msg
+main : Program Float Model Msg
 main =
     Browser.element
-        { init = \_ -> ( initialModel, initialCmd )
+        { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> subscriptions
+
+        -- Wraps whatever `activity` string we receive from the activityChanges port in a `GotActivity` message
+        -- Tsumari `app.ports.activityChanges.send('Sup')` in js results in `GotActivity "Sup"` in Elm
+        , subscriptions = \_ -> activityChanges GotActivity
         }
 
 
-subscriptions : Sub msg
-subscriptions =
-    Sub.none
+init : Float -> ( Model, Cmd Msg )
+init flags =
+    ( { initialModel | activity = "Initializing Pasta v" ++ String.fromFloat flags }, initialCmd )
 
 
 
@@ -32,6 +35,7 @@ subscriptions =
 
 type alias Model =
     { status : Status
+    , activity : String
     , chosenSize : ThumbnailSize
     , hue : Int
     , ripple : Int
@@ -52,6 +56,9 @@ type Status
 
 
 port setFilters : FilterOptions -> Cmd msg
+
+
+port activityChanges : (String -> msg) -> Sub msg
 
 
 type alias FilterOptions =
@@ -78,6 +85,7 @@ photoDecoder =
 initialModel : Model
 initialModel =
     { status = Loading
+    , activity = ""
     , chosenSize = Medium
     , hue = 5
     , ripple = 5
@@ -106,6 +114,7 @@ type Msg
     | SlidHue Int
     | SlidRipple Int
     | SlidNoise Int
+    | GotActivity String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -137,6 +146,9 @@ update msg model =
 
         SlidNoise noise ->
             applyFilters { model | noise = noise }
+
+        GotActivity activity ->
+            ( { model | activity = activity }, Cmd.none )
 
 
 applyFilters : Model -> ( Model, Cmd Msg )
@@ -242,6 +254,7 @@ viewLoaded : List Photo -> String -> Model -> List (Html.Html Msg)
 viewLoaded photos selectedUrl model =
     [ h1 [] [ text "Photo Groove" ]
     , viewSurpriseMeBtn
+    , div [ class "activity" ] [ text model.activity ]
     , div [ class "filters" ]
         [ viewFilter SlidHue "Hue" model.hue
         , viewFilter SlidRipple "Ripple" model.ripple
