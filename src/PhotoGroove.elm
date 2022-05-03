@@ -33,26 +33,15 @@ init flags =
 -- Data
 
 
-type alias Model =
-    { status : Status
-    , activity : String
-    , chosenSize : ThumbnailSize
-    , hue : Int
-    , ripple : Int
-    , noise : Int
-    }
+urlPrefix : String
+urlPrefix =
+    "http://elm-in-action.com/"
 
 
 type ThumbnailSize
     = Small
     | Medium
     | Large
-
-
-type Status
-    = Loading
-    | Loaded (List Photo) String
-    | Errored String
 
 
 port setFilters : FilterOptions -> Cmd msg
@@ -80,6 +69,22 @@ photoDecoder =
         |> required "url" string
         |> required "size" int
         |> optional "title" string "(untitled)"
+
+
+type Status
+    = Loading
+    | Loaded (List Photo) String
+    | Errored String
+
+
+type alias Model =
+    { status : Status
+    , activity : String
+    , chosenSize : ThumbnailSize
+    , hue : Int
+    , ripple : Int
+    , noise : Int
+    }
 
 
 initialModel : Model
@@ -229,11 +234,6 @@ getPhotos model photos =
 
 
 -- View
-
-
-urlPrefix : String
-urlPrefix =
-    "http://elm-in-action.com/"
 
 
 view : Model -> Html.Html Msg
