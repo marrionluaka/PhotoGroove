@@ -11156,18 +11156,34 @@ var $author$project$PhotoGroove$Loaded = F2(
 	function (a, b) {
 		return {$: 'Loaded', a: a, b: b};
 	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$PhotoGroove$getPhotos = F2(
 	function (model, photos) {
 		if (photos.b) {
 			var first = photos.a;
 			var rest = photos.b;
-			return _Utils_Tuple2(
+			return $author$project$PhotoGroove$applyFilters(
 				_Utils_update(
 					model,
 					{
-						status: A2($author$project$PhotoGroove$Loaded, photos, first.url)
-					}),
-				$elm$core$Platform$Cmd$none);
+						status: function () {
+							var _v1 = $elm$core$List$head(photos);
+							if (_v1.$ === 'Just') {
+								var photo = _v1.a;
+								return A2($author$project$PhotoGroove$Loaded, photos, photo.url);
+							} else {
+								return A2($author$project$PhotoGroove$Loaded, _List_Nil, '');
+							}
+						}()
+					}));
 		} else {
 			return _Utils_Tuple2(
 				_Utils_update(

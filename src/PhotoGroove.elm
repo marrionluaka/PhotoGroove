@@ -200,7 +200,16 @@ getPhotos model photos =
     case photos of
         -- `(firstUrl :: _) as urls` is the same as `const { firstUrl, ...rest } = urls` in js where `rest == _`
         first :: rest ->
-            ( { model | status = Loaded photos first.url }, Cmd.none )
+            applyFilters
+                { model
+                    | status =
+                        case List.head photos of
+                            Just photo ->
+                                Loaded photos photo.url
+
+                            Nothing ->
+                                Loaded [] ""
+                }
 
         [] ->
             ( { model | status = Errored "0 photos found" }, Cmd.none )
