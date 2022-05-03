@@ -29,6 +29,14 @@ init flags =
     ( { initialModel | activity = "Initializing Pasta v" ++ String.fromFloat flags }, initialCmd )
 
 
+initialCmd : Cmd Msg
+initialCmd =
+    Http.get
+        { url = "http://elm-in-action.com/photos/list.json"
+        , expect = Http.expectJson GotPhotos (list photoDecoder)
+        }
+
+
 
 -- Data
 
@@ -96,14 +104,6 @@ initialModel =
     , ripple = 5
     , noise = 5
     }
-
-
-initialCmd : Cmd Msg
-initialCmd =
-    Http.get
-        { url = "http://elm-in-action.com/photos/list.json"
-        , expect = Http.expectJson GotPhotos (list photoDecoder)
-        }
 
 
 
