@@ -10962,7 +10962,15 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
-var $author$project$PhotoFolders$initialModel = {photos: $elm$core$Dict$empty, selectedPhotoUrl: $elm$core$Maybe$Nothing};
+var $author$project$PhotoFolders$Folder = function (a) {
+	return {$: 'Folder', a: a};
+};
+var $author$project$PhotoFolders$initialModel = {
+	photos: $elm$core$Dict$empty,
+	root: $author$project$PhotoFolders$Folder(
+		{name: 'Loading', photoUrls: _List_Nil, subfolders: _List_Nil}),
+	selectedPhotoUrl: $elm$core$Maybe$Nothing
+};
 var $author$project$PhotoFolders$modelDecoder = $elm$json$Json$Decode$succeed(
 	{
 		photos: $elm$core$Dict$fromList(
@@ -10996,6 +11004,44 @@ var $author$project$PhotoFolders$modelDecoder = $elm$json$Json$Decode$succeed(
 						url: 'coli'
 					})
 				])),
+		root: $author$project$PhotoFolders$Folder(
+			{
+				name: 'Photos',
+				photoUrls: _List_Nil,
+				subfolders: _List_fromArray(
+					[
+						$author$project$PhotoFolders$Folder(
+						{
+							name: '2020',
+							photoUrls: _List_fromArray(
+								['trevi', 'coli']),
+							subfolders: _List_fromArray(
+								[
+									$author$project$PhotoFolders$Folder(
+									{name: 'outdoors', photoUrls: _List_Nil, subfolders: _List_Nil}),
+									$author$project$PhotoFolders$Folder(
+									{
+										name: 'indoors',
+										photoUrls: _List_fromArray(
+											['fresco']),
+										subfolders: _List_Nil
+									})
+								])
+						}),
+						$author$project$PhotoFolders$Folder(
+						{
+							name: '2021',
+							photoUrls: _List_Nil,
+							subfolders: _List_fromArray(
+								[
+									$author$project$PhotoFolders$Folder(
+									{name: 'outdoors', photoUrls: _List_Nil, subfolders: _List_Nil}),
+									$author$project$PhotoFolders$Folder(
+									{name: 'indoors', photoUrls: _List_Nil, subfolders: _List_Nil})
+								])
+						})
+					])
+			}),
 		selectedPhotoUrl: $elm$core$Maybe$Just('trevi')
 	});
 var $author$project$PhotoFolders$init = function (_v0) {
@@ -11038,6 +11084,35 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $author$project$PhotoFolders$viewFolder = function (_v0) {
+	var folder = _v0.a;
+	var subfolders = A2($elm$core$List$map, $author$project$PhotoFolders$viewFolder, folder.subfolders);
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('folder')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$label,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(folder.name)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('subfolders')
+					]),
+				subfolders)
+			]));
+};
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$html$Html$img = _VirtualDom_node('img');
@@ -11135,6 +11210,23 @@ var $author$project$PhotoFolders$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$class('folders')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h1,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Folders')
+							])),
+						$author$project$PhotoFolders$viewFolder(model.root)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
 						$elm$html$Html$Attributes$class('selected-photo')
 					]),
 				_List_fromArray(
@@ -11151,4 +11243,4 @@ var $author$project$PhotoFolders$main = $elm$browser$Browser$element(
 		view: $author$project$PhotoFolders$view
 	});
 _Platform_export({'PhotoFolders':{'init':$author$project$PhotoFolders$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoFolders.Msg","aliases":{"PhotoFolders.Model":{"args":[],"type":"{ selectedPhotoUrl : Maybe.Maybe String.String, photos : Dict.Dict String.String PhotoFolders.Photo }"},"PhotoFolders.Photo":{"args":[],"type":"{ title : String.String, size : Basics.Int, relatedUrls : List.List String.String, url : String.String }"}},"unions":{"PhotoFolders.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"GotInitialModel":["Result.Result Http.Error PhotoFolders.Model"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"PhotoFolders.Msg","aliases":{"PhotoFolders.Model":{"args":[],"type":"{ selectedPhotoUrl : Maybe.Maybe String.String, photos : Dict.Dict String.String PhotoFolders.Photo, root : PhotoFolders.Folder }"},"PhotoFolders.Photo":{"args":[],"type":"{ title : String.String, size : Basics.Int, relatedUrls : List.List String.String, url : String.String }"}},"unions":{"PhotoFolders.Msg":{"args":[],"tags":{"ClickedPhoto":["String.String"],"GotInitialModel":["Result.Result Http.Error PhotoFolders.Model"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"PhotoFolders.Folder":{"args":[],"tags":{"Folder":["{ name : String.String, photoUrls : List.List String.String, subfolders : List.List PhotoFolders.Folder }"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Dict.NColor":{"args":[],"tags":{"Red":[],"Black":[]}}}}})}});}(this));
