@@ -35,21 +35,22 @@
 <body>
   <main id="app"></main>
   <script src="pasta.js"></script>
-  <script src="index.js"></script>
+  <script src="app.js"></script>
   <script>
-    const app = Elm.PhotoGroove.init({
-      flags: Pasta.version,
-      node: document.getElementById("app")
-    })
+    const app = Elm.PhotoFolders.init({ node: document.getElementById('app') })
+    // const app = Elm.PhotoGroove.init({
+    //   flags: Pasta.version,
+    //   node: document.getElementById("app")
+    // })
 
-    app.ports.setFilters.subscribe(options => {
-      // requestAnimationFrame allows code to run just before the browser's next repaint
-      requestAnimationFrame(() => Pasta.apply(document.getElementById("main-canvas"), options))
-    })
+    // app.ports.setFilters.subscribe(options => {
+    //   // requestAnimationFrame allows code to run just before the browser's next repaint
+    //   requestAnimationFrame(() => Pasta.apply(document.getElementById("main-canvas"), options))
+    // })
 
-    Pasta.addActivityListener(activity => {
-      app.ports.activityChanges.send(activity)
-    })
+    // Pasta.addActivityListener(activity => {
+    //   app.ports.activityChanges.send(activity)
+    // })
   </script>
 </body>
 

@@ -8,6 +8,7 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, int, list, string)
 import Json.Decode.Pipeline exposing (required)
+import PhotoGroove exposing (photoDecoder)
 
 
 main : Program () Model Msg
@@ -32,14 +33,7 @@ urlPrefix =
 type Msg
     = ClickedPhoto String
     | GotInitialModel (Result Http.Error Model)
-
-
-type alias Photo =
-    { title : String
-    , size : Int
-    , relatedUrls : List String
-    , url : String
-    }
+    | ClickedFolder FolderPath
 
 
 type Folder
@@ -47,7 +41,13 @@ type Folder
         { name : String
         , photoUrls : List String
         , subfolders : List Folder
+        , expanded : Bool
         }
+
+
+type FolderPath
+    = End
+    | Subfolder Int FolderPath
 
 
 type alias Model =
@@ -65,6 +65,7 @@ initialModel =
         Folder
             { name = "Loading"
             , photoUrls = []
+            , expanded = True
             , subfolders = []
             }
     }
@@ -82,72 +83,89 @@ init _ =
 
 modelDecoder : Decoder Model
 modelDecoder =
-    Decode.succeed
-        { selectedPhotoUrl = Just "trevi"
-        , photos =
-            Dict.fromList
-                [ ( "trevi"
-                  , { title = "Trevi"
-                    , relatedUrls = [ "coli", "fresco" ]
-                    , size = 34
-                    , url = "trevi"
-                    }
-                  )
-                , ( "fresco"
-                  , { title = "Fresco"
-                    , relatedUrls = [ "trevi" ]
-                    , size = 46
-                    , url = "fresco"
-                    }
-                  )
-                , ( "coli"
-                  , { title = "Coliseum"
-                    , relatedUrls = [ "trevi", "fresco" ]
-                    , size = 36
-                    , url = "coli"
-                    }
-                  )
-                ]
-        , root =
-            Folder
-                { name = "Photos"
-                , photoUrls = []
-                , subfolders =
-                    [ Folder
-                        { name = "2020"
-                        , photoUrls = [ "trevi", "coli" ]
-                        , subfolders =
-                            [ Folder
-                                { name = "outdoors"
-                                , photoUrls = []
-                                , subfolders = []
-                                }
-                            , Folder
-                                { name = "indoors"
-                                , photoUrls = [ "fresco" ]
-                                , subfolders = []
-                                }
-                            ]
-                        }
-                    , Folder
-                        { name = "2021"
-                        , photoUrls = []
-                        , subfolders =
-                            [ Folder
-                                { name = "outdoors"
-                                , photoUrls = []
-                                , subfolders = []
-                                }
-                            , Folder
-                                { name = "indoors"
-                                , photoUrls = []
-                                , subfolders = []
-                                }
-                            ]
-                        }
-                    ]
-                }
+    Decode.map2
+        (\root photos ->
+            { photos = photos, root = root, selectedPhotoUrl = Nothing }
+        )
+        folderDecoder
+        modelPhotosDecoder
+
+
+folderDecoder : Decoder Folder
+folderDecoder =
+    Decode.succeed folderFromJson
+        |> required "name" string
+        |> required "photos" photosDecoder
+        |> required "subfolders" (Decode.lazy (\_ -> list folderDecoder))
+
+
+folderFromJson : String -> Dict String Photo -> List Folder -> Folder
+folderFromJson name photos subfolders =
+    Folder
+        { name = name
+        , expanded = True
+        , subfolders = subfolders
+        , photoUrls = Dict.keys photos
         }
+
+
+type alias Photo =
+    { title : String
+    , size : Int
+    , relatedUrls : List String
+    , url : String
+    }
+
+
+modelPhotosDecoder : Decoder (Dict String Photo)
+modelPhotosDecoder =
+    Decode.succeed modelPhotosFromJson
+        |> required "photos" photosDecoder
+        |> required "subfolders" (Decode.lazy (\_ -> list modelPhotosDecoder))
+
+
+modelPhotosFromJson : Dict String Photo -> List (Dict String Photo) -> Dict String Photo
+modelPhotosFromJson folderPhotos subfolderPhotos =
+    List.foldl Dict.union folderPhotos subfolderPhotos
+
+
+photosDecoder : Decoder (Dict String Photo)
+photosDecoder =
+    Decode.keyValuePairs jsonPhotoDecoder
+        |> Decode.map fromPairs
+
+
+type alias JsonPhoto =
+    { title : String
+    , size : Int
+    , relatedUrls : List String
+    }
+
+
+jsonPhotoDecoder : Decoder JsonPhoto
+jsonPhotoDecoder =
+    Decode.succeed JsonPhoto
+        |> required "title" string
+        |> required "size" int
+        |> required "related_photos" (list string)
+
+
+fromPairs : List ( String, JsonPhoto ) -> Dict String Photo
+fromPairs pairs =
+    pairs
+        |> List.map finishPhoto
+        |> Dict.fromList
+
+
+finishPhoto : ( String, JsonPhoto ) -> ( String, Photo )
+finishPhoto ( url, json ) =
+    ( url
+    , { url = url
+      , size = json.size
+      , title = json.title
+      , relatedUrls = json.relatedUrls
+      }
+    )
 
 
 
@@ -165,6 +183,32 @@ update msg model =
 
         GotInitialModel (Err _) ->
             ( model, Cmd.none )
+
+        ClickedFolder path ->
+            ( { model | root = toggleExpanded path model.root }, Cmd.none )
+
+
+toggleExpanded : FolderPath -> Folder -> Folder
+toggleExpanded path (Folder folder) =
+    case path of
+        End ->
+            Folder { folder | expanded = not folder.expanded }
+
+        Subfolder targetIndex remainingPath ->
+            let
+                subfolders : List Folder
+                subfolders =
+                    List.indexedMap transform folder.subfolders
+
+                transform : Int -> Folder -> Folder
+                transform currentIndex currentSubfolder =
+                    if currentIndex == targetIndex then
+                        toggleExpanded remainingPath currentSubfolder
+
+                    else
+                        currentSubfolder
+            in
+            Folder { folder | subfolders = subfolders }
 
 
 
@@ -190,7 +234,7 @@ view model =
     div [ class "content" ]
         [ div [ class "folders" ]
             [ h1 [] [ text "Folders" ]
-            , viewFolder model.root
+            , viewFolder End model.root
             ]
         , div [ class "selected-photo" ] [ selectedPhoto ]
         ]
@@ -219,15 +263,45 @@ viewRelatedPhoto url =
         []
 
 
-viewFolder : Folder -> Html Msg
-viewFolder (Folder folder) =
-    -- (Folder folder) == inline patter matching
+viewFolder : FolderPath -> Folder -> Html Msg
+viewFolder path (Folder folder) =
+    -- (Folder folder) == inline pattern matching
     let
         -- recursive call to viewFolder
-        subfolders =
-            List.map viewFolder folder.subfolders
+        viewSubFolder : Int -> Folder -> Html Msg
+        viewSubFolder index subfolder =
+            viewFolder (appendIndex index path) subfolder
+
+        folderLabel =
+            label [ onClick (ClickedFolder path) ] [ text folder.name ]
     in
-    div [ class "folder" ]
-        [ label [] [ text folder.name ]
-        , div [ class "subfolders" ] subfolders
-        ]
+    if folder.expanded then
+        let
+            contents =
+                List.append
+                    (List.indexedMap viewSubFolder folder.subfolders)
+                    (List.map viewPhoto folder.photoUrls)
+        in
+        div [ class "folder expanded" ]
+            [ folderLabel
+            , div [ class "contents" ] contents
+            ]
+
+    else
+        div [ class "folder collasped" ] [ folderLabel ]
+
+
+viewPhoto : String -> Html Msg
+viewPhoto url =
+    div [ class "photo", onClick (ClickedPhoto url) ]
+        [ text url ]
+
+
+appendIndex : Int -> FolderPath -> FolderPath
+appendIndex index path =
+    case path of
+        End ->
+            Subfolder index End
+
+        Subfolder subfolderIndex remainingPath ->
+            Subfolder subfolderIndex (appendIndex index remainingPath)
